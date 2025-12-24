@@ -1,0 +1,21 @@
+name = "sniff"
+main = "build/worker/shim.mjs"
+compatibility_date = "2025-04-25"
+
+[build]
+command = "cargo install -q worker-build && worker-build --release"
+
+[vars]
+DEVICE_NAME = "px_7a"
+
+# Stable channel credentials
+STABLE_EMAIL = "jayasuryakraja@gmail.com"
+STABLE_AAS_TOKEN = "aas_et/AKppINYo5u8U5dWP9gRJxxVfHNh1DQ-9SeG14P2LFdSzHtjrQAq_zx0YYlTpfw7qrGMmXxTS7oyuPZIUdOMBEv1Me32R8ri-qQXcPrUIE_EOYbO6O5l6cXlqOjjNw_CoaK8JNXWMHxmdd1h_sTQ7d710dJVhk4z3hzzNfX9BLP6M_vMpxl1BkzquBtY-XCOTieunlomMzvJU_QIIwzGT2Ac"
+
+# Beta channel credentials (account enrolled in beta programs)
+BETA_EMAIL = "jayasuryakraja@gmail.com"
+BETA_AAS_TOKEN = "aas_et/AKppINYo5u8U5dWP9gRJxxVfHNh1DQ-9SeG14P2LFdSzHtjrQAq_zx0YYlTpfw7qrGMmXxTS7oyuPZIUdOMBEv1Me32R8ri-qQXcPrUIE_EOYbO6O5l6cXlqOjjNw_CoaK8JNXWMHxmdd1h_sTQ7d710dJVhk4z3hzzNfX9BLP6M_vMpxl1BkzquBtY-XCOTieunlomMzvJU_QIIwzGT2Ac"
+
+# Alpha channel credentials (account enrolled in alpha programs)
+ALPHA_EMAIL = "jayasuryakraja@gmail.com"
+ALPHA_AAS_TOKEN = "aas_et/AKppINYo5u8U5dWP9gRJxxVfHNh1DQ-9SeG14P2LFdSzHtjrQAq_zx0YYlTpfw7qrGMmXxTS7oyuPZIUdOMBEv1Me32R8ri-qQXcPrUIE_EOYbO6O5l6cXlqOjjNw_CoaK8JNXWMHxmdd1h_sTQ7d710dJVhk4z3hzzNfX9BLP6M_vMpxl1BkzquBtY-XCOTieunlomMzvJU_QIIwzGT2Ac"
