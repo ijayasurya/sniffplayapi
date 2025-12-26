@@ -8,6 +8,7 @@ use utoipa::{OpenApi, ToSchema};
         crate::handlers::get_details_multi,
         crate::handlers::get_details_single,
         crate::handlers::get_download_info,
+        crate::handlers::proxy_download,
     ),
     components(
         schemas(
@@ -29,12 +30,13 @@ use utoipa::{OpenApi, ToSchema};
     ),
     tags(
         (name = "App Details", description = "Get Google Play Store app details"),
-        (name = "Downloads", description = "Get app download information")
+        (name = "Downloads", description = "Get app download information and URLs"),
+        (name = "Direct APK Download", description = "Stream APK files directly with custom filenames")
     ),
     info(
         title = "Sniff API",
-        description = "API for retrieving Google Play Store app details across different release channels",
-        version = "1.0.0",
+        description = "API for retrieving Google Play Store app details and downloading APKs across different release channels (Stable, Beta, Alpha). Supports direct APK downloads with customizable filenames.",
+        version = "1.1.0",
         contact(
             name = "API Support",
             url = "https://xhyrom.dev/docs/sniff"
@@ -130,6 +132,11 @@ pub struct SerializableDetailsResponse {
 
 #[derive(Serialize, Deserialize, ToSchema)]
 #[schema(example = json!({
+    "suggested_filename": "Sniff_Discord_Stable_289.20.apk",
+    "app_name": "Discord",
+    "version_string": "289.20",
+    "version_code": 289020,
+    "channel": "stable",
     "main_apk_url": "https://play.googleapis.com/download/by-token/download?token=AOTCm0Q...",
     "splits": [
         {
@@ -144,6 +151,16 @@ pub struct SerializableDetailsResponse {
     "additional_files": []
 }))]
 pub struct DownloadInfo {
+    #[schema(example = "Sniff_Discord_Stable_289.20.apk")]
+    pub suggested_filename: Option<String>,
+    #[schema(example = "Discord")]
+    pub app_name: Option<String>,
+    #[schema(example = "289.20")]
+    pub version_string: Option<String>,
+    #[schema(example = 289020)]
+    pub version_code: Option<i32>,
+    #[schema(example = "stable")]
+    pub channel: Option<String>,
     #[schema(example = "https://play.googleapis.com/download/by-token/download?token=AOTCm0Q...")]
     pub main_apk_url: Option<String>,
     pub splits: Vec<SplitFile>,
@@ -256,30 +273,4 @@ pub struct AppInfoContainer {
     pub description: Option<String>,
 }
 
-impl From<gpapi::DownloadInfo> for DownloadInfo {
-    fn from(gpapi_download_info: gpapi::DownloadInfo) -> Self {
-        let (main_apk_url, splits_data, additional_files_data) = gpapi_download_info;
 
-        let splits = splits_data
-            .into_iter()
-            .map(|(name, url)| SplitFile {
-                name,
-                download_url: url,
-            })
-            .collect();
-
-        let additional_files = additional_files_data
-            .into_iter()
-            .map(|(filename, url)| AdditionalFile {
-                filename,
-                download_url: url,
-            })
-            .collect();
-
-        DownloadInfo {
-            main_apk_url,
-            splits,
-            additional_files,
-        }
-    }
-}

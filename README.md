@@ -5,13 +5,15 @@
 **Sniff** is a specialized API service designed to retrieve Google Play Store app
 details across different release channels (Stable, Beta, Alpha). It provides a clean
 interface to access app metadata including version information, changelog, download
-sizes, and other details for Android applications.
+sizes, and other details for Android applications. **Now with direct APK streaming downloads!**
 
 ## Features
 
 - **Multi-Channel Support**: Access app details from Stable, Beta, and Alpha channels (where available)
 - **Intelligent Track Detection**: Automatically identifies which channels are available for specific apps
 - **Unified API**: Simple REST API endpoints for accessing app information
+- **Direct APK Downloads**: Stream APKs directly with custom branded filenames
+- **Streaming Proxy**: Downloads start immediately without server-side buffering
 
 ## API Endpoints
 
@@ -72,65 +74,78 @@ Error responses:
 }
 ```
 
-### Get Download URL for a Specific App Version
+### Get Download Info
 
 ```
+GET /v1/download/:package_name/:channel
 GET /v1/download/:package_name/:channel/:version_code
 ```
 
-Retrieves the download URL for a specific version of an app from a particular channel.
+Retrieves download URLs and metadata for an app. Optionally specify a version code for a specific version.
 
 **Parameters:**
 
 - `package_name`: The package identifier of the app (e.g., `com.discord`)
 - `channel`: Release channel (`stable`, `beta`, or `alpha`)
-- `version_code`: The specific Android version code to download (integer)
+- `version_code`: (Optional) The specific Android version code to download
 
 **Response Format:**
-
-Successful response:
 
 ```json
 {
   "success": true,
-  "data": [
-    "https://play.googleapis.com/download/by-token/download?token=tkn",
-    [
-      [
-        "config.xxhdpi",
-        "https://play.googleapis.com/download/by-token/download?token=tkn"
-      ],
-      [
-        "config.sk",
-        "https://play.googleapis.com/download/by-token/download?token=tkn"
-      ],
-      [
-        "config.cs",
-        "https://play.googleapis.com/download/by-token/download?token=tkn"
-      ],
-      [
-        "config.en",
-        "https://play.googleapis.com/download/by-token/download?token=tkn"
-      ],
-      [
-        "config.arm64_v8a",
-        "https://play.googleapis.com/download/by-token/download?token=tkn"
-      ]
+  "data": {
+    "suggested_filename": "Sniff_Discord_Stable_289.20.apk",
+    "app_name": "Discord",
+    "version_string": "289.20",
+    "version_code": 289020,
+    "channel": "stable",
+    "main_apk_url": "https://play.googleapis.com/download/by-token/download?token=...",
+    "splits": [
+      {
+        "name": "config.xxhdpi",
+        "download_url": "https://play.googleapis.com/download/by-token/download?token=..."
+      },
+      {
+        "name": "config.arm64_v8a",
+        "download_url": "https://play.googleapis.com/download/by-token/download?token=..."
+      }
     ],
-    []
-  ],
+    "additional_files": []
+  },
   "error": null
 }
 ```
 
-Error response:
+### Direct APK Download (Streaming Proxy)
 
-```json
-{
-  "success": false,
-  "data": null,
-  "error": "App not found or version unavailable"
-}
+```
+GET /v1/apk/:package_name/:channel
+GET /v1/apk/:package_name/:channel/:version_code
+```
+
+**Streams the APK file directly** with a custom filename. The download starts immediately without buffering the entire file server-side.
+
+**Parameters:**
+
+- `package_name`: The package identifier of the app (e.g., `com.discord`)
+- `channel`: Release channel (`stable`, `beta`, or `alpha`)
+- `version_code`: (Optional) The specific Android version code to download
+
+**Response:**
+
+- Returns the APK binary with `Content-Disposition: attachment; filename="..."` header
+- Filename format: `{BRAND_NAME}_{AppName}_{Channel}_{Version}.apk`
+- Example: `Sniff_Discord_Stable_289.20.apk`
+
+**Example Usage:**
+
+```bash
+# Download latest stable version
+curl -OJ https://your-api.com/v1/apk/com.discord/stable
+
+# Download specific version
+curl -OJ https://your-api.com/v1/apk/com.discord/stable/289020
 ```
 
 ## Deployment
@@ -141,10 +156,33 @@ Sniff is designed to be deployed as a Cloudflare Worker, providing global distri
 
 The following environment variables are required:
 
-- `DEVICE_NAME`: Device identifier for Google Play API
-- `STABLE_EMAIL`: Email for stable track access
-- `STABLE_AAS_TOKEN`: Authentication token for stable track
-- `BETA_EMAIL`: Email enrolled in beta programs
-- `BETA_AAS_TOKEN`: Authentication token for beta access
-- `ALPHA_EMAIL`: Email enrolled in alpha programs
-- `ALPHA_AAS_TOKEN`: Authentication token for alpha access
+| Variable | Description |
+|----------|-------------|
+| `DEVICE_NAME` | Device identifier for Google Play API (e.g., `px_7a`) |
+| `BRAND_NAME` | Brand name prefix for APK filenames (e.g., `Sniff`) |
+| `STABLE_EMAIL` | Email for stable track access |
+| `STABLE_AAS_TOKEN` | Authentication token for stable track |
+| `BETA_EMAIL` | Email enrolled in beta programs |
+| `BETA_AAS_TOKEN` | Authentication token for beta access |
+| `ALPHA_EMAIL` | Email enrolled in alpha programs |
+| `ALPHA_AAS_TOKEN` | Authentication token for alpha access |
+
+### Customizing APK Filenames
+
+Set the `BRAND_NAME` environment variable in `wrangler.toml`:
+
+```toml
+[vars]
+DEVICE_NAME = "px_7a"
+BRAND_NAME = "YourBrand"
+```
+
+Downloaded APKs will be named: `YourBrand_AppName_Channel_Version.apk`
+
+## API Documentation
+
+Interactive OpenAPI documentation is available at:
+
+```
+GET /openapi.json
+```
